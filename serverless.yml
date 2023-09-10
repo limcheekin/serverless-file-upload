@@ -44,9 +44,10 @@ functions:
     handler: file_upload.handler
     # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls
     url:
+      true
       # Allow CORS for all requests from any origin
-      cors:
-        allowedOrigins:
-          - "*"
-        allowedMethods:
-          - POST
+      #cors:
+      #  allowedOrigins:
+      #    - "*"
+      #  allowedMethods:
+      #    - POST

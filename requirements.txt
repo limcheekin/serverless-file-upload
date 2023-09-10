@@ -1,0 +1,6 @@
+fastapi
+python-multipart
+# for aws lambda
+mangum
+# for local 
+# uvicorn

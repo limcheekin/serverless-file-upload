@@ -1,8 +1,9 @@
 fastapi
 python-multipart
+starlette_validation_uploadfile
 # for aws lambda
 mangum
-# for local 
+# for local / self-host
 # uvicorn
 # for testclient
 # httpx

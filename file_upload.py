@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from starlette_validation_uploadfile import ValidateUploadFileMiddleware
 from fastapi.responses import StreamingResponse
 import tempfile
 import os
@@ -7,12 +8,27 @@ import random
 import asyncio
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.add_middleware(
+    ValidateUploadFileMiddleware,
+    app_path="/upload",
+    max_size=1048576,  # 1 MB
+    file_type=["text/plain",
+               "image/jpeg",
+               "image/png",
+               "video/mp4",
+               "video/webm",
+               "application/json",
+               "application/pdf",
+               ]
 )
 
 
@@ -50,7 +66,6 @@ async def create_upload_file(file: UploadFile = File(...)):
             temp.write(chunk)
         temp.flush()
     print("Upload completed!")
-    headers = {"Content-Length", "100"}
     return StreamingResponse(simulate_long_running_process())
 
 
@@ -59,7 +74,6 @@ def test_upload_file():
     client = TestClient(app)
     with open("test.json", "rb") as file:
         response = client.post("/upload", files={"file": file})
-    # assert response.status_code == 200
     # iterate over the response content
     for chunk in response.iter_bytes():
         print(f"progress {chunk}")

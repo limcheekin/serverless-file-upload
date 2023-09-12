@@ -1,7 +1,10 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import tempfile
 import os
+import random
+import asyncio
 
 app = FastAPI()
 app.add_middleware(
@@ -11,6 +14,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+async def simulate_long_running_process():
+    # simulate the progress of processing by sending 100 zero bytes to the client
+    max_bytes = 100
+    zero_bytes = bytes(max_bytes)
+    progress = 0
+    while progress < max_bytes:
+        num_of_bytes = random.randint(5, 15)
+        startIndex = progress
+        progress += num_of_bytes
+        endIndex = progress
+        if (endIndex > max_bytes):
+            endIndex = max_bytes
+        print(startIndex, endIndex - 1)
+        sleeping_time_ms = random.randint(1, 50)
+        sleeping_time_s = sleeping_time_ms * 0.01
+        await asyncio.sleep(sleeping_time_s)
+        yield zero_bytes[startIndex: endIndex]
 
 
 @app.post("/upload")
@@ -27,23 +49,21 @@ async def create_upload_file(file: UploadFile = File(...)):
                 break
             temp.write(chunk)
         temp.flush()
-    response = {"filename": file.filename, "tempfilename": temp.name}
-    print(response)
-    return response
+    print("Upload completed!")
+    headers = {"Content-Length", "100"}
+    return StreamingResponse(simulate_long_running_process())
 
 
 def test_upload_file():
     from fastapi.testclient import TestClient
     client = TestClient(app)
-    with open("text.json", "rb") as file:
+    with open("test.json", "rb") as file:
         response = client.post("/upload", files={"file": file})
-    assert response.status_code == 200
-    print(response.json())
+    # assert response.status_code == 200
+    # iterate over the response content
+    for chunk in response.iter_bytes():
+        print(f"progress {chunk}")
 
-
-if os.getenv("RUNTIME") == "aws-lambda":
-    from mangum import Mangum
-    handler = Mangum(app)
 
 if __name__ == "__main__":
     # test_upload_file()
@@ -51,3 +71,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app, host=os.getenv("HOST", "localhost"), port=int(os.getenv("PORT", 8000))
     )
+elif os.getenv("RUNTIME") == "aws-lambda":
+    from mangum import Mangum
+    handler = Mangum(app)

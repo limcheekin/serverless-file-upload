@@ -74,8 +74,3 @@ if __name__ == "__main__":
 elif os.getenv("RUNTIME") == "aws-lambda":
     from mangum import Mangum
     handler = Mangum(app)
-
-    def lambda_handler(event, context):
-        global handler
-        response = handler(event, context, response_type="RESPONSE_STREAM")
-        return response

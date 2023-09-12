@@ -41,7 +41,6 @@ custom:
 
 functions:
   upload:
-    handler: file_upload.lambda_handler
+    handler: file_upload.handler
     # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls
-    url:
-      invokeMode: RESPONSE_STREAM
+    url: true
